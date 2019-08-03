@@ -4,53 +4,199 @@ class_name DebugGeometry
 
 var m = SpatialMaterial.new()
 
+var object_count = Vector3.ZERO
+var items = []
+var lines = []
+var triangles = []
+
+enum DebugShape {CUBE, SPHERE, CYLINDER, CONE, ARROW, COORDINATE_SYSTEM, GRID, LINE, POINT}
+
 
 func _ready():
 	m.set_flag(3, true)
 	material_override = m
+	
+	draw_stuff()
+
+
+func _process(delta):
+	update_geometry_timer(delta)
+
+
+func update_geometry_timer(delta):
+	var b_draw = false
+	if items.size() > object_count.x:
+		b_draw = true
+	var b_redraw = false
+	if !items.empty():
+		for item in items:
+			item[1] -= delta
+			if item[1] < 0.0:
+				items.erase(item)
+				b_redraw = true
+	
+	if b_redraw:
+		clear_geometry()
+		for item in items:
+			if item[0] == false:
+				lines.append(item)
+			else:
+				triangles.append(item)
+		draw_geometry()
+		object_count = Vector3(items.size(), lines.size(), triangles.size())
+	
+	if b_draw:
+		for i in range(object_count.x, items.size()):
+			if items[i][0] == false:
+				lines.append(items[i])
+			else:
+				triangles.append(items[i])
+		draw_geometry(object_count.y, object_count.z)
+		object_count = Vector3(items.size(), lines.size(), triangles.size())
+
+
+func clear_geometry():
+	clear()
+	lines.clear()
+	triangles.clear()
+
+
+func draw_geometry(lines_index : int = 0, triangles_index : int = 0):
+	begin(Mesh.PRIMITIVE_LINES)
+	for i in range(lines_index, lines.size()):
+		add_geometry(lines[i])
+	end()
+	begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(triangles_index, triangles.size()):
+		add_geometry(triangles[i])
+	end()
+
+
+func add_geometry(args):
+	match args[2]:
+		DebugShape.CUBE:
+			_draw_cube(args[3], args[4], args[5], args[0])
+		DebugShape.SPHERE:
+			_draw_sphere(args[3], args[4], args[5], args[6], args[7], args[0])
+		DebugShape.CYLINDER:
+			_draw_cylinder(args[3], args[4], args[5], args[6], args[7], args[8], args[0])
+		DebugShape.CONE:
+			_draw_cone(args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[0])
+		DebugShape.ARROW:
+			_draw_arrow(args[3], args[4], args[5], args[6], args[0])
+		DebugShape.COORDINATE_SYSTEM:
+			_draw_coordinate_system(args[3], args[4], args[5], args[6], args[7], args[0])
+		DebugShape.GRID:
+			_draw_grid(args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10])
+		DebugShape.LINE:
+			_draw_line(args[3], args[4], args[5], args[6])
+		DebugShape.POINT:
+			_draw_point(args[3], args[4], args[5])
 
 
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == BUTTON_LEFT and event.is_pressed():
-			draw_stuff()
+			draw_random_stuff()
 
 
 func draw_stuff():
-	clear()
-	begin(Mesh.PRIMITIVE_LINES)
-	
-	draw_cube(Vector3(-1, 1, -1), 0.9 * Vector3(1, 1, 1), Color(10, 10, 0))
+	draw_debug_cube(10, Vector3(-1, 1, -1), 0.9 * Vector3(1, 1, 1), Color(10, 10, 0))
 	
 	var grid_pos = Vector3(5, 0, -5)
 	var grid_normal = Vector3(-0.2, 1.0, 0.9).normalized()
 	var grid_tangent = Vector3(-2.0, 0.8, 1.0).normalized()
-	draw_line(grid_pos, grid_pos + grid_normal, 0, Color(0, 10, 0))
-	draw_line(grid_pos, grid_pos + grid_tangent, 0, Color(0, 0, 10))
-	draw_grid(grid_pos, 10, 5, 20, 10, grid_normal, grid_tangent, Color(5, 5, 5))
-	
-	draw_grid(Vector3(), 10, 10, 10, 10, Vector3.RIGHT, Vector3.BACK, Color(10, 0, 0))
-	draw_grid(Vector3(), 10, 10, 10, 10, Vector3.UP, Vector3.RIGHT, Color(0, 10, 0))
-	draw_grid(Vector3(), 10, 10, 10, 10, Vector3.BACK, Vector3.RIGHT, Color(0, 0, 10))
-	
-	set_color(Color(10,10,10))
-	draw_cylinder(Vector3(2, -2, 1), Vector3(3, -1, 2), 1.0, 32, true, Color(5, 0, 5))
-	draw_cone(Vector3(-4, 1, 0), Vector3(-4, 2, -1), 0.2, 0.5, 16, true, Color(0, 2, 0), false)
-	
-	draw_sphere(Vector3(-2, -2, 2), 36, 18, 1.5, Color(0, 2, 2))
-	
-	end()
-	
-	begin(Mesh.PRIMITIVE_TRIANGLES)
-	draw_line(Vector3(2, 1, 0), Vector3(-2, 0, 3), 0.1, Color(0.7, 0.2, 0.1))
-	draw_coordinate_system(Vector3.ZERO, Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 10)
-	draw_cylinder(Vector3(4, 0, -3), Vector3(2, 1, -4), 0.5, 16, true, Color(1, 1, 1), true)
-	draw_cone(Vector3(-3, 1, 0), Vector3(-3, 2, -1), 0.5, 0.2, 16, true, Color(0, 2, 0), true)
-	draw_arrow(Vector3(4, 2, 1), Vector3(1, -3, 2), 2, Color(3, 2, 1))
-	draw_sphere(Vector3(2, 3, 1), 8, 4, 0.1, Color(0, 0, 0), true)
-	draw_coordinate_system(Vector3(-4, 0, -3), Vector3(3, 2, 1), Vector3(1, 1, 1), 0.5, 10)
-	
-	end()
+	draw_debug_line(10, grid_pos, grid_pos + grid_normal, 0, Color(0, 10, 0))
+	draw_debug_line(10, grid_pos, grid_pos + grid_tangent, 0, Color(0, 0, 10))
+	draw_debug_grid(10, grid_pos, 10, 5, 20, 10, grid_normal, grid_tangent, Color(5, 5, 5))
+
+	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.RIGHT, Vector3.BACK, Color(10, 0, 0))
+	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.UP, Vector3.RIGHT, Color(0, 10, 0))
+	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.BACK, Vector3.RIGHT, Color(0, 0, 10))
+
+	draw_debug_cylinder(10, Vector3(2, -2, 1), Vector3(3, -1, 2), 1.0, 32, true, Color(5, 0, 5))
+	draw_debug_cone(10, Vector3(-4, 1, 0), Vector3(-4, 2, -1), 0.2, 0.5, 16, true, Color(0, 2, 0), false)
+
+	draw_debug_sphere(10, Vector3(-2, -2, 2), 36, 18, 1.5, Color(0, 2, 2))
+
+	draw_debug_line(10, Vector3(2, 1, 0), Vector3(-2, 0, 3), 0.1, Color(0.7, 0.2, 0.1))
+	draw_debug_coordinate_system(10, Vector3.ZERO, Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 10)
+	draw_debug_cylinder(10, Vector3(4, 0, -3), Vector3(2, 1, -4), 0.5, 16, true, Color(1, 1, 1), true)
+	draw_debug_cone(10, Vector3(-3, 1, 0), Vector3(-3, 2, -1), 0.5, 0.2, 16, true, Color(0, 2, 0), true)
+	draw_debug_arrow(10, Vector3(4, 2, 1), Vector3(1, -3, 2), 2, Color(3, 2, 1))
+	draw_debug_point(10, Vector3(2, 3, 1), 0.1, Color(0, 0, 0))
+	draw_debug_coordinate_system(10, Vector3(-4, 0, -3), Vector3(3, 2, 1), Vector3(1, 1, 1), 0.5, 10)
+
+
+func draw_random_stuff():
+	var random = round(rand_range(0, DebugShape.size())) as int
+	match random:
+		DebugShape.CUBE:
+			draw_debug_cube(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), Vector3(rand_range(0, 3), rand_range(0, 3), rand_range(0, 3)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
+		DebugShape.SPHERE:
+			draw_debug_sphere(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), round(rand_range(6, 64)), round(rand_range(6, 64)), rand_range(0.1, 2), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
+		DebugShape.CYLINDER:
+			draw_debug_cylinder(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), rand_range(0.1, 2), round(rand_range(6, 64)), round(randf()) as bool, Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
+		DebugShape.CONE:
+			draw_debug_cone(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 2), rand_range(0.1, 3), round(rand_range(6, 64)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
+		DebugShape.ARROW:
+			draw_debug_arrow(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 5), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
+		DebugShape.COORDINATE_SYSTEM:
+			draw_debug_coordinate_system(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 5), rand_range(0, 5), round(randf()) as bool)
+		DebugShape.GRID:
+			draw_debug_grid(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(1, 10), rand_range(1, 10), round(rand_range(1, 50)) as int, round(rand_range(1, 50)) as int, Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
+		DebugShape.LINE:
+			draw_debug_line(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(-1, 1), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
+		DebugShape.POINT:
+			draw_debug_point(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(-1, 1), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
+
+
+func draw_debug_cube(t : float, p : Vector3, extents : Vector3, c : Color = Color(0, 0, 0), b_triangles = false):
+	items.append([b_triangles, t, DebugShape.CUBE, p, extents, c])
+
+
+func draw_debug_sphere(t : float, p : Vector3, lon : int, lat : int, r : float,
+		c : Color = Color(0, 0, 0), b_triangles = false):
+	items.append([b_triangles, t, DebugShape.SPHERE, p, lon, lat, r, c])
+
+
+func draw_debug_cylinder(t : float, p1 : Vector3, p2 : Vector3, r : float, lon : int = 8, b_caps = true,
+		color : Color = Color(0, 0, 0), b_triangles = false):
+	items.append([b_triangles, t, DebugShape.CYLINDER, p1, p2, r, lon, b_caps, color])
+
+
+func draw_debug_cone(t : float, p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 8,
+		b_caps = true, color : Color = Color(0, 0, 0), b_triangles = false):
+	items.append([b_triangles, t, DebugShape.CONE, p1, p2, r1, r2, lon, b_caps, color])
+
+
+func draw_debug_arrow(t : float, p : Vector3, n : Vector3, s : float = 1.0,
+		c : Color = Color(0, 0, 0), b_triangles = true):
+	items.append([b_triangles, t, DebugShape.ARROW, p, n, s, c])
+
+
+func draw_debug_coordinate_system(t : float, p : Vector3, x : Vector3 = Vector3.RIGHT, y : Vector3 = Vector3.UP,
+		s : float = 1.0, c : float = 1.0, b_triangles = true):
+	items.append([b_triangles, t, DebugShape.COORDINATE_SYSTEM, p, x, y, s, c])
+
+
+func draw_debug_grid(t : float, p : Vector3, a : float, b : float, div_a : int, div_b : int,
+		normal : Vector3 = Vector3(0, 1, 0), tangent : Vector3 = Vector3(1, 0, 0), color : Color = Color(0, 0, 0)):
+	items.append([false, t, DebugShape.GRID, p, a, b, div_a, div_b, normal, tangent, color])
+
+
+func draw_debug_line(t : float, p1 : Vector3, p2 : Vector3, thickness : float, color : Color = Color(0, 0, 0)):
+	var b_triangles = false
+	if thickness > 0:
+		b_triangles = true
+	items.append([b_triangles, t, DebugShape.LINE, p1, p2, thickness, color])
+
+
+func draw_debug_point(t : float, p : Vector3, size : float, color : Color = Color(0, 0, 0)):
+	var b_triangles = false
+	if size > 0:
+		b_triangles = true
+	items.append([b_triangles, t, DebugShape.POINT, p, size, color])
 
 
 func add_line(p1 : Vector3, p2 : Vector3):
@@ -64,7 +210,7 @@ func add_triangle(p1 : Vector3, p2 : Vector3, p3 : Vector3):
 	add_vertex(p3)
 
 
-func draw_cube(p : Vector3, extents : Vector3, c : Color = Color(0, 0, 0), b_triangles = false):
+func _draw_cube(p : Vector3, extents : Vector3, c : Color = Color(0, 0, 0), b_triangles = false):
 	var x = extents.x
 	var y = extents.y
 	var z = extents.z
@@ -106,7 +252,7 @@ func draw_cube(p : Vector3, extents : Vector3, c : Color = Color(0, 0, 0), b_tri
 		add_line(points[2], points[6])
 
 
-func draw_sphere(p : Vector3, lon : int, lat : int, r : float, c : Color = Color(0, 0, 0), b_triangles = false):
+func _draw_sphere(p : Vector3, lon : int, lat : int, r : float, c : Color = Color(0, 0, 0), b_triangles = false):
 	for i in range(1, lat + 1):
 		var lat0 = PI * (-0.5 + (i - 1) as float / lat)
 		var y0 = sin(lat0)
@@ -136,12 +282,12 @@ func draw_sphere(p : Vector3, lon : int, lat : int, r : float, c : Color = Color
 				add_line(points[1], points[2])
 
 
-func draw_cylinder(p1 : Vector3, p2 : Vector3, r : float, lon : int = 8, b_caps = true,
+func _draw_cylinder(p1 : Vector3, p2 : Vector3, r : float, lon : int = 8, b_caps = true,
 		color : Color = Color(0, 0, 0), b_triangles = false):
-	draw_cone(p1, p2, r, r, lon, b_caps, color, b_triangles)
+	_draw_cone(p1, p2, r, r, lon, b_caps, color, b_triangles)
 
 
-func draw_cone(p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 8,
+func _draw_cone(p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 8,
 		b_caps = true, color : Color = Color(0, 0, 0), b_triangles = false):
 	var h = (p2 - p1).length()
 	for i in range(1, lon + 1):
@@ -170,7 +316,6 @@ func draw_cone(p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 8
 			ang = Vector3.UP.angle_to(dir)
 		for i in range(points.size()):
 			points[i] = points[i].rotated(rot, ang) + p1
-			
 		
 		set_color(color)
 		if b_triangles:
@@ -188,25 +333,25 @@ func draw_cone(p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 8
 				add_line(points[1], points[5])
 
 
-func draw_arrow(p : Vector3, n : Vector3, s : float = 1.0, c : Color = Color(0, 0, 0)):
+func _draw_arrow(p : Vector3, n : Vector3, s : float = 1.0, c : Color = Color(0, 0, 0), b_triangles = true):
 	n = n.normalized()
-	draw_cylinder(p, p + 0.8 * n * s, 0.05 * s, 8, true, c, true)
-	draw_cone(p + 0.8 * n * s, p + n * s, 0.1 * s, 0, 8, true, c, true)
+	_draw_cylinder(p, p + 0.8 * n * s, 0.05 * s, 8, true, c, b_triangles)
+	_draw_cone(p + 0.8 * n * s, p + n * s, 0.1 * s, 0, 8, true, c, b_triangles)
 
 
-func draw_coordinate_system(p : Vector3, x : Vector3 = Vector3.RIGHT, y : Vector3 = Vector3.UP, s : float = 1.0,
-		c : float = 1.0):
+func _draw_coordinate_system(p : Vector3, x : Vector3 = Vector3.RIGHT, y : Vector3 = Vector3.UP, s : float = 1.0,
+		c : float = 1.0, b_triangles = true):
 	x = x.normalized()
 	var z = x.cross(y).normalized()
 	y = z.cross(x).normalized()
 	
 	c = clamp(c, 0, 10)
-	draw_arrow(p, x, s, Color(c, 0, 0))
-	draw_arrow(p, y, s, Color(0, c, 0))
-	draw_arrow(p, z, s, Color(0, 0, c))
+	_draw_arrow(p, x, s, Color(c, 0, 0), b_triangles)
+	_draw_arrow(p, y, s, Color(0, c, 0), b_triangles)
+	_draw_arrow(p, z, s, Color(0, 0, c), b_triangles)
 
 
-func draw_grid(p : Vector3, a : float, b : float, div_a : int, div_b : int,
+func _draw_grid(p : Vector3, a : float, b : float, div_a : int, div_b : int,
 		normal : Vector3 = Vector3(0, 1, 0),
 		tangent : Vector3 = Vector3(1, 0, 0),
 		color : Color = Color(0, 0, 0)):
@@ -241,10 +386,17 @@ func draw_grid(p : Vector3, a : float, b : float, div_a : int, div_b : int,
 				Vector3(a / 2.0, 0, lz).rotated(normal_rot, normal_angle).rotated(tangent_rot, tangent_angle) + p)
 
 
-func draw_line(p1 : Vector3, p2 : Vector3, thickness : float, color : Color = Color(0, 0, 0)):
+func _draw_line(p1 : Vector3, p2 : Vector3, thickness : float, color : Color = Color(0, 0, 0)):
+	set_color(color)
 	if thickness <= 0.0:
-		set_color(color)
 		add_line(p1, p2)
 	else:
-		set_color(color)
-		draw_cylinder(p1, p2, thickness / 2, 8, false, color, true)
+		_draw_cylinder(p1, p2, thickness / 2, 8, false, color, true)
+
+
+func _draw_point(p : Vector3, size : float, color : Color = Color(0, 0, 0)):
+	set_color(color)
+	if size <= 0:
+		add_line(p, p)
+	else:
+		_draw_sphere(p, 8, 4, size / 2, color, true)
