@@ -306,12 +306,11 @@ func _draw_cone(p1 : Vector3, p2 : Vector3, r1 : float, r2 : float, lon : int = 
 				Vector3(0.0, h, 0.0)]
 		
 		var dir = (p2 - p1).normalized()
-		var rot
-		var ang
-		if dir == Vector3.UP:
-			rot = Vector3.UP
-			ang = 0
-		else:
+		var rot = Vector3.RIGHT
+		var ang = 0.0
+		if dir == Vector3.DOWN:
+			ang = PI
+		elif dir != Vector3.UP and dir != Vector3.ZERO:
 			rot = Vector3.UP.cross(dir).normalized()
 			ang = Vector3.UP.angle_to(dir)
 		for i in range(points.size()):
@@ -358,12 +357,11 @@ func _draw_grid(p : Vector3, a : float, b : float, div_a : int, div_b : int,
 	if tangent == normal:
 		tangent = Vector3.RIGHT
 	
-	var normal_rot
-	var normal_angle
-	if normal == Vector3.UP:
-		normal_rot = normal
-		normal_angle = 0.0
-	else:
+	var normal_rot = Vector3.RIGHT
+	var normal_angle = 0.0
+	if normal == Vector3.DOWN:
+		normal_angle = PI
+	elif normal != Vector3.UP and normal != Vector3.ZERO:
 		normal_rot = Vector3.UP.cross(normal).normalized()
 		normal_angle = Vector3.UP.angle_to(normal)
 		if normal.cross(Vector3.UP).normalized() == -normal.normalized():
