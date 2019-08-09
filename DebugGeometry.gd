@@ -15,8 +15,6 @@ enum DebugShape {CUBE, SPHERE, CYLINDER, CONE, ARROW, COORDINATE_SYSTEM, GRID, L
 func _ready():
 	m.set_flag(3, true)
 	material_override = m
-	
-	draw_stuff()
 
 
 func _process(delta):
@@ -92,63 +90,6 @@ func add_geometry(args):
 			_draw_line(args[3], args[4], args[5], args[6])
 		DebugShape.POINT:
 			_draw_point(args[3], args[4], args[5])
-
-
-func _input(event):
-	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT and event.is_pressed():
-			draw_random_stuff()
-
-
-func draw_stuff():
-	draw_debug_cube(10, Vector3(-1, 1, -1), 0.9 * Vector3(1, 1, 1), Color(10, 10, 0))
-	
-	var grid_pos = Vector3(5, 0, -5)
-	var grid_normal = Vector3(-0.2, 1.0, 0.9).normalized()
-	var grid_tangent = Vector3(-2.0, 0.8, 1.0).normalized()
-	draw_debug_line(10, grid_pos, grid_pos + grid_normal, 0, Color(0, 10, 0))
-	draw_debug_line(10, grid_pos, grid_pos + grid_tangent, 0, Color(0, 0, 10))
-	draw_debug_grid(10, grid_pos, 10, 5, 20, 10, grid_normal, grid_tangent, Color(5, 5, 5))
-
-	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.RIGHT, Vector3.BACK, Color(10, 0, 0))
-	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.UP, Vector3.RIGHT, Color(0, 10, 0))
-	draw_debug_grid(10, Vector3(), 10, 10, 10, 10, Vector3.BACK, Vector3.RIGHT, Color(0, 0, 10))
-
-	draw_debug_cylinder(10, Vector3(2, -2, 1), Vector3(3, -1, 2), 1.0, 32, true, Color(5, 0, 5))
-	draw_debug_cone(10, Vector3(-4, 1, 0), Vector3(-4, 2, -1), 0.2, 0.5, 16, true, Color(0, 2, 0), false)
-
-	draw_debug_sphere(10, Vector3(-2, -2, 2), 36, 18, 1.5, Color(0, 2, 2))
-
-	draw_debug_line(10, Vector3(2, 1, 0), Vector3(-2, 0, 3), 0.1, Color(0.7, 0.2, 0.1))
-	draw_debug_coordinate_system(10, Vector3.ZERO, Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 10)
-	draw_debug_cylinder(10, Vector3(4, 0, -3), Vector3(2, 1, -4), 0.5, 16, true, Color(1, 1, 1), true)
-	draw_debug_cone(10, Vector3(-3, 1, 0), Vector3(-3, 2, -1), 0.5, 0.2, 16, true, Color(0, 2, 0), true)
-	draw_debug_arrow(10, Vector3(4, 2, 1), Vector3(1, -3, 2), 2, Color(3, 2, 1))
-	draw_debug_point(10, Vector3(2, 3, 1), 0.1, Color(0, 0, 0))
-	draw_debug_coordinate_system(10, Vector3(-4, 0, -3), Vector3(3, 2, 1), Vector3(1, 1, 1), 0.5, 10)
-
-
-func draw_random_stuff():
-	var random = round(rand_range(0, DebugShape.size())) as int
-	match random:
-		DebugShape.CUBE:
-			draw_debug_cube(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), Vector3(rand_range(0, 3), rand_range(0, 3), rand_range(0, 3)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
-		DebugShape.SPHERE:
-			draw_debug_sphere(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), round(rand_range(6, 64)), round(rand_range(6, 64)), rand_range(0.1, 2), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
-		DebugShape.CYLINDER:
-			draw_debug_cylinder(rand_range(0, 10), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), Vector3(rand_range(-3, 3), rand_range(-3, 3), rand_range(-3, 3)), rand_range(0.1, 2), round(rand_range(6, 64)), round(randf()) as bool, Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
-		DebugShape.CONE:
-			draw_debug_cone(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 2), rand_range(0.1, 3), round(rand_range(6, 64)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
-		DebugShape.ARROW:
-			draw_debug_arrow(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 5), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)), round(randf()) as bool)
-		DebugShape.COORDINATE_SYSTEM:
-			draw_debug_coordinate_system(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(0.1, 5), rand_range(0, 5), round(randf()) as bool)
-		DebugShape.GRID:
-			draw_debug_grid(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(1, 10), rand_range(1, 10), round(rand_range(1, 50)) as int, round(rand_range(1, 50)) as int, Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
-		DebugShape.LINE:
-			draw_debug_line(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(-1, 1), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
-		DebugShape.POINT:
-			draw_debug_point(rand_range(0, 10), Vector3(rand_range(-5, 5), rand_range(-5, 5), rand_range(-5, 5)), rand_range(-1, 1), Color(rand_range(0, 5), rand_range(0, 5), rand_range(0, 5)))
 
 
 func draw_debug_cube(t : float, p : Vector3, extents : Vector3, c : Color = Color(0, 0, 0), b_triangles = false):
