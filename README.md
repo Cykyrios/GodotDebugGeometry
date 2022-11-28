@@ -1,5 +1,5 @@
 # GodotDebugGeometry
-Godot GDScript used to draw geometry for development and debugging purposes
+Godot GDScript used to draw geometry for development and debugging purposes.
 
 A demo project displaying  random shapes [is available here](https://github.com/Cykyrios/GodotDebugGeometry-demo).
 
@@ -26,6 +26,8 @@ Keep in mind that all shapes are drawn relative to the DebugGeometry node, which
 
 If you do not want to use it as an autoload, I recommend adding `class_name DebugGeometry` at the top of the file, and placing a `MeshInstance3D` with this script attached where you want in your scene tree. Keep in mind that everything will be drawn relative to this node.
 
+Note that all updates to debug shapes happen in `_process()` with a very low priority, so you should typically be able to call drawing functions from anywhere. Under some circumstances, such as calling drawing functions in quick succession faster than `_process()` delta times, duplicate shapes may appear.
+
 
 ## Drawing functions reference
 ```gdscript
@@ -42,7 +44,7 @@ draw_debug_sphere(t: float, p: Vector3, lon: int, lat: int, r: float, c: Color =
 ```
 * p: center of the sphere
 * lon: longitude subdivisions, lon = 8 will look like an octogon when seen from above
-* lat: latitude subdivision, half the value of lon will give the same number of subdivisions
+* lat: latitude subdivision, half the value of `lon` will give the same number of subdivisions
 * r: radius of the sphere
 
 ```gdscript
@@ -51,7 +53,7 @@ draw_debug_cylinder(t: float, p1: Vector3, p2: Vector3, r: float, lon: int = 8, 
 * p1: first end of the cylinder
 * p2: second end of the cylinder
 * r: radius of the cylinder
-* lon: number of sides (see description for debug_sphere's lon)
+* lon: number of sides (see description for debug_sphere's `lon`)
 * b_caps: draw flat ends of the cylinders
 
 ```gdscript
