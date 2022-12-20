@@ -16,12 +16,12 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	update_geometry_timer(delta)
+	_update_geometry_timer(delta)
 
 
-func update_geometry_timer(delta: float) -> void:
-	clear_geometry()
-	draw_geometry()
+func _update_geometry_timer(delta: float) -> void:
+	_clear_geometry()
+	_draw_geometry()
 	if not debug_shapes.is_empty():
 		var count := debug_shapes.size()
 		for i in count:
@@ -31,20 +31,20 @@ func update_geometry_timer(delta: float) -> void:
 				debug_shapes.remove_at(count - 1 - i)
 
 
-func clear_geometry() -> void:
+func _clear_geometry() -> void:
 	im.clear_surfaces()
 
 
-func draw_geometry(index: int = 0) -> void:
+func _draw_geometry(index: int = 0) -> void:
 	for i in range(index, debug_shapes.size()):
 		var shape := debug_shapes[i]
-		draw_debug_shape(shape)
+		_draw_debug_shape(shape)
 
 
-func draw_debug_shape(shape: DebugShape) -> void:
+func _draw_debug_shape(shape: DebugShape) -> void:
 	if shape is DebugShapeCompound:
 		for sub_shape in shape.debug_shapes:
-			draw_debug_shape(sub_shape)
+			_draw_debug_shape(sub_shape)
 	else:
 		var primitives: Array[Primitive] = []
 		if shape.draw_surfaces:
